@@ -22,7 +22,7 @@
         }
   
         const response = await fetch(
-          `https://[YOUR-PROJECT-REF].supabase.co/functions/v1/verify-badge?pageUrl=${encodeURIComponent(window.location.href)}&identifier=${encodeURIComponent(identifier)}`,
+          `https://mkkwzvxpagewmtfcuzga.supabase.co/functions/v1/verify-badge?pageUrl=${encodeURIComponent(window.location.href)}&identifier=${encodeURIComponent(identifier)}`,
           {
             method: 'GET',
             headers: {
