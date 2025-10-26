@@ -2,15 +2,6 @@
     // API Configuration
     const API_ENDPOINT = 'https://am-alpha-l91ilpkeu-anthromade.vercel.app/api/badge/render';
     
-    // Get configuration from script URL or data attributes
-    const script = document.currentScript;
-    const identifier = script.getAttribute('data-identifier');
-    
-    if (!identifier) {
-      console.error('Verified Badge: Missing required data-identifier attribute');
-      return;
-    }
-  
     // Prevent multiple initializations
     if (window.verifiedBadgeInitialized) return;
     window.verifiedBadgeInitialized = true;
@@ -18,9 +9,17 @@
     // Main function to check verification and render badge
     async function checkVerification() {
       try {
+        // Find the badge container
         const container = document.querySelector('[data-verified-badge]');
         if (!container) {
           console.warn('Verified Badge: Container not found. Add a div with data-verified-badge attribute.');
+          return;
+        }
+        
+        // Get the identifier from the container's data-identifier attribute
+        const identifier = container.getAttribute('data-identifier');
+        if (!identifier) {
+          console.error('Verified Badge: Missing required data-identifier attribute on badge container.');
           return;
         }
   
