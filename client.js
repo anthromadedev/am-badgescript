@@ -1,5 +1,8 @@
 (function() {
-    // Get configuration from script URL
+    // API Configuration
+    const API_ENDPOINT = 'https://am-alpha-l91ilpkeu-anthromade.vercel.app/api/badge/render';
+    
+    // Get configuration from script URL or data attributes
     const script = document.currentScript;
     const identifier = script.getAttribute('data-identifier');
     
@@ -21,23 +24,46 @@
           return;
         }
   
-        const response = await fetch(
-          `https://mkkwzvxpagewmtfcuzga.supabase.co/functions/v1/verify-badge?pageUrl=${encodeURIComponent(window.location.href)}&identifier=${encodeURIComponent(identifier)}`,
-          {
-            method: 'GET',
-            headers: {
-              'Content-Type': 'application/json'
-            }
-          }
-        );
+        // Build API URL with query parameters
+        const url = encodeURIComponent(window.location.href);
+        const externalId = encodeURIComponent(identifier);
+        const apiUrl = `${API_ENDPOINT}?external_id=${externalId}&url=${url}`;
+        
+        // Set timeout for request (5 seconds)
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 5000);
   
-        const data = await response.json();
-  
-        if (data.verified && data.badgeHtml) {
-          container.innerHTML = data.badgeHtml;
+        const response = await fetch(apiUrl, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          signal: controller.signal
+        });
+        
+        clearTimeout(timeoutId);
+        
+        // Handle different response codes
+        if (response.ok) {
+          const html = await response.text();
+          container.innerHTML = html;
+        } else if (response.status === 429) {
+          // Rate limited - retry once after 60 seconds
+          console.warn('Verified Badge: Rate limited. Retrying in 60 seconds...');
+          setTimeout(checkVerification, 60000);
+        } else if (response.status === 403) {
+          // Badge limit exceeded - silent fail
+          console.warn('Verified Badge: Badge unavailable (limit reached)');
+        } else {
+          // Other errors - silent fail
+          console.error('Verified Badge: Failed to load badge', response.status);
         }
       } catch (error) {
-        console.error('Verified Badge: Error checking verification:', error);
+        if (error.name === 'AbortError') {
+          console.error('Verified Badge: Request timeout');
+        } else {
+          console.error('Verified Badge: Error checking verification:', error);
+        }
       }
     }
   
